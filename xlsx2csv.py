@@ -123,12 +123,10 @@ def xlsx2csv(infilepath, outfile, sheetname=None, sheetid=1, dateformat=None, de
         workbook = parse(ziphandle, Workbook, "xl/workbook.xml")
 
         for s in workbook.sheets:
-            ## Skip unnecessary worksheets
+            # Skip unnecessary worksheets
             if sheetid > 0 or sheetname:
                 if s['id'] != sheetid and not re.search(sheetname, s['name']):
                     continue
-
-            print s['name']
             if sheetdelimiter != "":
                 outfile.write(sheetdelimiter + " " + str(s['id']) + " - " + s['name'].encode('utf-8') + os.linesep)
             sheetfile = ziphandle.open("xl/worksheets/sheet%i.xml" %s['id'], "r")
