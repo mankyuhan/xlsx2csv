@@ -110,7 +110,7 @@ STANDARD_FORMATS = {
 #   sheet_delimiter - sheets delimiter used when processing all sheets
 #   skip_empty_lines - skip empty lines
 #
-def xlsx2csv(infilepath, outfile, sheetname=None, sheetid=1, dateformat=None, delimiter=",", sheetdelimiter="--------", skip_empty_lines=False):
+def xlsx2csv(infilepath, outfile, sheetname=None, sheetid=0, dateformat=None, delimiter=",", sheetdelimiter="--------", skip_empty_lines=False):
     writer = csv.writer(outfile, quoting=csv.QUOTE_MINIMAL, delimiter=delimiter, lineterminator=os.linesep)
     try:
       ziphandle = zipfile.ZipFile(infilepath)
@@ -124,9 +124,16 @@ def xlsx2csv(infilepath, outfile, sheetname=None, sheetid=1, dateformat=None, de
 
         for s in workbook.sheets:
             # Skip unnecessary worksheets
-            if sheetid > 0 or sheetname:
+            if not sheetname and sheetid > 0:
+                if s['id'] != sheetid:
+                    continue
+            elif sheetname and sheetid == 0:
+                if not re.search(sheetname, s['name']):
+                    continue
+            elif sheetname and sheetid > 0:
                 if s['id'] != sheetid and not re.search(sheetname, s['name']):
                     continue
+
             if sheetdelimiter != "":
                 outfile.write(sheetdelimiter + " " + str(s['id']) + " - " + s['name'].encode('utf-8') + os.linesep)
             sheetfile = ziphandle.open("xl/worksheets/sheet%i.xml" %s['id'], "r")
@@ -408,7 +415,7 @@ if __name__ == "__main__":
       help="sheets delimiter used to separate sheets, pass '' if you don't want delimiters (default '--------')")
     parser.add_option("-r", "--recursive", dest="recursive", default=False, action="store_true",
       help="convert recursively")
-    parser.add_option("-s", "--sheet", dest="sheetid", default=1, type="int",
+    parser.add_option("-s", "--sheet", dest="sheetid", default=0, type="int",
       help="sheet no to convert (0 for all sheets)")
     parser.add_option("-n", "--sheetname", dest="sheetname", default=False,
       help="sheetname.  accepts python search patterns.")
